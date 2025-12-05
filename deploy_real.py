@@ -62,11 +62,14 @@ def get_stats_tensor(stats_json):
         包含统计信息张量的字典
     """
     stats_tensor = {}
-    for name in ["state", "action"]:
-        stats_tensor[name] = {}
-        for key in ["mean", "std"]:
-            stats_tensor[name][key] = torch.from_numpy(np.array(stats_json[name][key]))
-    return stats_tensor
+
+    stats_tensor["state"]={}
+    stats_tensor["action"]={}
+
+    stats_tensor["state"]["mean"] = torch.from_numpy(np.array(stats_json["observation.state"]["mean"]))
+    stats_tensor["state"]["std"] = torch.from_numpy(np.array(stats_json["observation.state"]["std"]))
+    stats_tensor["action"]["mean"] = torch.from_numpy(np.array(stats_json["action"]["mean"]))
+    stats_tensor["action"]["std"] = torch.from_numpy(np.array(stats_json["action"]["std"]))
 
 
 def multi_image_get_item(
