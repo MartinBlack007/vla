@@ -62,10 +62,6 @@ def get_stats_tensor(stats_json):
         包含统计信息张量的字典
     """
     stats_tensor = {}
-    for name in ["state", "action"]:
-        stats_tensor[name] = {}
-        for key in ["mean", "std"]:
-            stats_tensor[name][key] = torch.from_numpy(np.array(stats_json[name][key]))
 
     stats_tensor["state"]={}
     stats_tensor["action"]={}
