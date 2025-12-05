@@ -457,7 +457,7 @@ class GO1Server:
                         await websocket.send_text(f'{{"error":"inference failed: {e}"}}')
                         continue
                     out_bytes = msgpack.packb(to_serializable(result), use_bin_type=True)
-                    await websocket.send_bytes(out_bytes)
+                    await websocket.send(out_bytes)
             except WebSocketDisconnect:
                 return
             except Exception as e:
