@@ -62,16 +62,10 @@ def get_stats_tensor(stats_json):
         包含统计信息张量的字典
     """
     stats_tensor = {}
-
-    stats_tensor["state"]={}
-    stats_tensor["action"]={}
-
-    stats_tensor["state"]["mean"] = torch.from_numpy(np.array(stats_json["observation.state"]["mean"]))
-    stats_tensor["state"]["std"] = torch.from_numpy(np.array(stats_json["observation.state"]["std"]))
-    stats_tensor["action"]["mean"] = torch.from_numpy(np.array(stats_json["action"]["mean"]))
-    stats_tensor["action"]["std"] = torch.from_numpy(np.array(stats_json["action"]["std"]))
-
-
+    for name in ["state", "action"]:
+        stats_tensor[name] = {}
+        for key in ["mean", "std"]:
+            stats_tensor[name][key] = torch.from_numpy(np.array(stats_json[name][key]))
     return stats_tensor
 
 
@@ -281,30 +275,6 @@ class GO1Infer:
         outputs = outputs.numpy()
 
         return outputs
-    
-    def get_prompt(task_id: int) -> str:
-        """
-        根据任务ID获取对应的提示语
-        
-        Args:
-            task_id: 任务ID
-            
-        Returns:
-            对应的提示语
-        """
-        task_prompts = {
-            1: "Pick up the large black workpiece.",
-            2: "Place the large workpiece at position 2.",
-            3: "pick up the green cube.",
-            4: "pick up the yellow cube.",
-            5: "pick up the big cube.",
-            6: "pick up the small cube.",
-            7: "pick up the cube on the left.",
-            8: "pick up the cube on the right.",
-            9: "pick up the cube in front.",
-            10: "pick up the cube at the back.",
-        }
-        return task_prompts.get(task_id, "perform the specified task.")
 
     def inference(self, payload: Dict[str, Any]):
         """
@@ -324,9 +294,7 @@ class GO1Infer:
         if "low_rgb_images" in payload:
             payload["cam_hand_left_color"] = Image.fromarray(payload["low_rgb_images"])
 
-        #prompt = 'pick up the big workpiece.'
-        task_id = payload['task_id']
-        prompt = self.get_prompt(task_id)
+        prompt = 'pick up the big workpiece.'
         print(f"获取的提示: {prompt}")
         payload["final_prompt"] = f"What action should the robot take to {prompt}?"
 
@@ -438,8 +406,7 @@ def decode_observation(obs_packed: dict) -> dict:
             'base_rgb_images': base_rgb,
             'low_rgb_images': low_rgb,
             'ctrl_freqs': 30,  
-            'instruction': (obs_packed.get(b'instruction') or obs_packed.get('instruction')),
-            'task_id':(obs_packed.get(b'task_id') or obs_packed.get('task_id'))
+            'instruction': (obs_packed.get(b'instruction') or obs_packed.get('instruction'))
         }
         
         return observation_raw
@@ -477,6 +444,7 @@ class GO1Server:
                         continue
                     try:
                         payload = decode_observation(payload)
+
                     except Exception as e:
                         await websocket.send_text(f'{{"error":"reconstruct failed: {e}"}}')
                         continue
@@ -486,7 +454,7 @@ class GO1Server:
                         await websocket.send_text(f'{{"error":"inference failed: {e}"}}')
                         continue
                     out_bytes = msgpack.packb(to_serializable(result), use_bin_type=True)
-                    await websocket.send(out_bytes)
+                    await websocket.send_bytes(out_bytes)
             except WebSocketDisconnect:
                 return
             except Exception as e:
@@ -506,4 +474,5 @@ class GO1Server:
         )
 
 if __name__ == "__main__":
+    # GO1Server("/home/vipuser/Desktop/pick_place_go1_air_4/","/home/vipuser/Desktop/AgiBot-World/fuwei/dataset_stats.json").run(host="0.0.0.0", port=8800)
     GO1Server("/root/.cache/huggingface/hub/models--MartinB7--go1_air_pick_place_air_6/snapshots/7dc976f98a04e51816aaa4a64c0c6248dc8171ba/","/home/vipuser/Desktop/stats.json").run(host="0.0.0.0", port=8800)
