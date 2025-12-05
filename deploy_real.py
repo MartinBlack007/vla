@@ -440,7 +440,7 @@ class GO1Server:
                         await websocket.send_text('{"error":"expect binary msgpack frame"}')
                         continue
                     try:
-                        payload = msgpack.unpackb(data_bytes, raw=False, use_list=True)  # 客户端未设置 use_bin_type 也兼容
+                        payload = msgpack.unpackb(data_bytes, raw=True)  # 客户端未设置 use_bin_type 也兼容
                         print(f"接收到的 payload keys: {list(payload.keys())}")
                     except Exception as e:
                         await websocket.send_text(f'{{"error":"msgpack unpack failed: {e}"}}')
@@ -456,7 +456,7 @@ class GO1Server:
                     except Exception as e:
                         await websocket.send_text(f'{{"error":"inference failed: {e}"}}')
                         continue
-                    out_bytes = msgpack.packb(to_serializable(result), use_bin_type=True)
+                    out_bytes = msgpack.packb(to_serializable(result))
                     await websocket.send(out_bytes)
             except WebSocketDisconnect:
                 return
@@ -478,4 +478,5 @@ class GO1Server:
 
 if __name__ == "__main__":
     # GO1Server("/home/vipuser/Desktop/pick_place_go1_air_4/","/home/vipuser/Desktop/AgiBot-World/fuwei/dataset_stats.json").run(host="0.0.0.0", port=8800)
+
     GO1Server("/root/.cache/huggingface/hub/models--MartinB7--go1_air_pick_place_air_6/snapshots/7dc976f98a04e51816aaa4a64c0c6248dc8171ba/","/home/vipuser/Desktop/stats.json").run(host="0.0.0.0", port=8800)
