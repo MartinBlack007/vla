@@ -66,6 +66,16 @@ def get_stats_tensor(stats_json):
         stats_tensor[name] = {}
         for key in ["mean", "std"]:
             stats_tensor[name][key] = torch.from_numpy(np.array(stats_json[name][key]))
+
+    stats_tensor["state"]={}
+    stats_tensor["action"]={}
+
+    stats_tensor["state"]["mean"] = torch.from_numpy(np.array(stats_json["observation.state"]["mean"]))
+    stats_tensor["state"]["std"] = torch.from_numpy(np.array(stats_json["observation.state"]["std"]))
+    stats_tensor["action"]["mean"] = torch.from_numpy(np.array(stats_json["action"]["mean"]))
+    stats_tensor["action"]["std"] = torch.from_numpy(np.array(stats_json["action"]["std"]))
+
+
     return stats_tensor
 
 
